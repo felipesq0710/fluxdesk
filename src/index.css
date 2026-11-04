@@ -1,0 +1,242 @@
+@import '@fontsource-variable/hanken-grotesk/wght.css';
+@import '@fontsource-variable/bricolage-grotesque/wght.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: 246 246 248;
+  --surface: 255 255 255;
+  --surface-muted: 241 242 245;
+  --surface-raised: 255 255 255;
+  --line: 229 231 236;
+  --line-strong: 211 214 222;
+
+  --fg: 20 22 27;
+  --fg-muted: 86 92 105;
+  --fg-subtle: 107 113 128;
+
+  --brand-fg: 0 56 255;
+  --brand-soft: 234 239 255;
+  --ring: 0 56 255;
+
+  --chart-1: #0038ff;
+  --chart-2: #c2570c;
+  --chart-grid: #e6e7ec;
+  --chart-axis: #565c69;
+  --chart-cursor: rgb(20 22 27 / 0.05);
+  --chart-bar: #0038ff;
+  --chart-neutral: #646c7e;
+
+  --shadow-xs: 0 1px 1px rgb(20 22 27 / 0.04);
+  --shadow-card: 0 1px 0 rgb(20 22 27 / 0.03), 0 1px 3px rgb(20 22 27 / 0.06);
+  --shadow-pop: 0 0 0 1px rgb(20 22 27 / 0.06), 0 8px 24px -6px rgb(20 22 27 / 0.18), 0 2px 6px rgb(20 22 27 / 0.06);
+
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23565c69' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: 13 15 19;
+  --surface: 20 23 28;
+  --surface-muted: 26 30 37;
+  --surface-raised: 28 32 40;
+  --line: 38 43 53;
+  --line-strong: 53 60 73;
+
+  --fg: 236 238 243;
+  --fg-muted: 163 170 184;
+  --fg-subtle: 133 141 156;
+
+  --brand-fg: 140 166 255;
+  --brand-soft: 17 27 66;
+  --ring: 124 151 255;
+
+  --chart-1: #5b7cff;
+  --chart-2: #d8733a;
+  --chart-grid: #262b35;
+  --chart-axis: #a3aab8;
+  --chart-cursor: rgb(255 255 255 / 0.06);
+  --chart-bar: #5b7cff;
+  --chart-neutral: #7f89a0;
+
+  --shadow-xs: none;
+  --shadow-card: 0 0 0 1px rgb(255 255 255 / 0.02);
+  --shadow-pop: 0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 32px -8px rgb(0 0 0 / 0.65);
+
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a3aab8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    font-family: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-canvas text-base text-fg antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+  ::selection {
+    background: #ffd8b8;
+    color: #14161b;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--ring));
+    outline-offset: 2px;
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: #0038ff;
+  }
+  .dark input[type='checkbox'],
+  .dark input[type='radio'] {
+    accent-color: #5b7cff;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line-strong)) transparent;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-surface shadow-card;
+  }
+  .card-padded {
+    @apply card p-5 sm:p-6;
+  }
+
+  .page-title {
+    @apply font-display text-title font-semibold text-fg;
+    font-variation-settings: 'opsz' 48;
+  }
+  .page-lead {
+    @apply mt-1 max-w-2xl text-sm text-fg-muted;
+  }
+  .section-title {
+    @apply font-display text-[0.9375rem] font-semibold leading-5 tracking-tight text-fg;
+  }
+  .numeral {
+    @apply font-display font-semibold tabular-nums tracking-tight;
+  }
+  .link {
+    @apply rounded font-medium text-brand-fg underline-offset-2 hover:underline;
+  }
+
+  .btn {
+    @apply inline-flex min-h-[2.5rem] select-none items-center justify-center gap-2 whitespace-nowrap rounded-control px-4 py-2 text-sm font-medium transition-[background-color,border-color,box-shadow,color,transform] duration-120 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0;
+  }
+  .btn-primary {
+    @apply btn bg-brand text-white hover:bg-brand-600 active:bg-brand-700;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(0 28 133 / 0.35);
+  }
+  .btn-primary:disabled {
+    box-shadow: none;
+  }
+  .btn-secondary {
+    @apply btn border border-line-strong bg-surface text-fg shadow-xs hover:bg-surface-muted active:bg-surface-muted;
+  }
+  .btn-ghost {
+    @apply btn text-fg-muted hover:bg-surface-muted hover:text-fg;
+  }
+  .btn-danger {
+    @apply btn bg-danger text-white hover:bg-red-700 active:bg-red-800;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14);
+  }
+  .btn-sm {
+    @apply !min-h-0 gap-1.5 px-3 py-1.5 text-xs;
+  }
+  .btn-icon {
+    @apply !min-h-0 p-2;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-fg;
+  }
+  .field-input {
+    @apply block min-h-[2.5rem] w-full rounded-control border border-line-strong bg-surface px-3 py-2 text-sm text-fg shadow-xs transition-[border-color,box-shadow] duration-120 placeholder:text-fg-subtle hover:border-fg-subtle/60 focus:border-brand focus:outline-none focus:shadow-focus disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-60;
+  }
+  .dark .field-input:focus {
+    border-color: rgb(var(--ring));
+  }
+  select.field-input {
+    @apply cursor-pointer appearance-none bg-no-repeat pr-9;
+    background-image: var(--select-chevron);
+    background-position: right 0.65rem center;
+    background-size: 1rem;
+  }
+  .field-input[aria-invalid='true'] {
+    @apply border-danger focus:shadow-[0_0_0_3px_rgb(220_38_38/0.22)];
+  }
+  .field-error {
+    @apply mt-1.5 text-sm text-red-700 dark:text-red-400;
+  }
+  .field-hint {
+    @apply mt-1.5 text-xs text-fg-muted;
+  }
+
+  .data-table {
+    @apply w-full text-sm;
+  }
+  .data-table thead th {
+    @apply bg-surface-muted/70 px-4 py-2.5 text-left text-xs font-medium text-fg-muted;
+  }
+  .data-table tbody tr {
+    @apply border-b border-line/70 transition-colors duration-120 last:border-0 hover:bg-surface-muted/60;
+  }
+  .data-table td,
+  .data-table tbody th {
+    @apply px-4 py-3;
+  }
+
+  @media (max-width: 1023.98px) {
+    .stack-table,
+    .stack-table tbody,
+    .stack-table tr,
+    .stack-table tbody th,
+    .stack-table td {
+      display: block;
+    }
+    .stack-table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+    .stack-table tbody tr {
+      @apply border-b border-line px-4 py-3;
+    }
+    .stack-table tbody th,
+    .stack-table td {
+      @apply px-0 py-1;
+    }
+    .stack-table td[data-label] {
+      @apply flex items-center justify-between gap-4 text-right;
+    }
+    .stack-table td[data-label]::before {
+      content: attr(data-label);
+      @apply text-left text-xs text-fg-muted;
+    }
+  }
+}
