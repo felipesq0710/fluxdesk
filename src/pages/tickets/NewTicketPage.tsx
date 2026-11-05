@@ -57,10 +57,16 @@ export default function NewTicketPage() {
     }
 
     if (files.length > 0) {
-      const outcome = await uploadAttachments(created.id, profile.id, files)
-      if (outcome.failed.length > 0) {
-        const names = outcome.failed.map((f) => f.name).join(', ')
-        toast.warning(`Chamado ${created.code} aberto, mas não foi possível enviar: ${names}. Anexe-os novamente na página do chamado.`)
+      try {
+        const outcome = await uploadAttachments(created.id, profile.id, files)
+        if (outcome.failed.length > 0) {
+          const names = outcome.failed.map((f) => f.name).join(', ')
+          toast.warning(`Chamado ${created.code} aberto, mas não foi possível enviar: ${names}. Anexe-os novamente na página do chamado.`)
+          navigate(`/chamados/${created.id}`)
+          return
+        }
+      } catch (error) {
+        toast.warning(`Chamado ${created.code} aberto, mas ocorreu uma falha inesperada ao enviar os anexos: ${dbErrorMessage(error)}. Você poderá tentar novamente na página do chamado.`)
         navigate(`/chamados/${created.id}`)
         return
       }

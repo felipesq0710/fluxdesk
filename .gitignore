@@ -38,3 +38,5 @@ service-account*.json
 .vercel
 coverage
 dist-demo
+# Supabase CLI local link metadata
+supabase/.temp/

@@ -29,14 +29,14 @@ const QUEUE_ROWS: { key: 'open' | 'in_progress' | 'waiting' | 'resolved'; label:
   { key: 'resolved', label: 'Resolvidos', hint: 'Inclui encerrados', status: 'resolved' },
 ]
 
-function QueueCard({ totals }: { totals: ReportData['totals'] }) {
+function QueueCard({ totals, dashboard = false, composite = false }: { totals: ReportData['totals']; dashboard?: boolean; composite?: boolean }) {
   const enoughForAverage = hasSufficientAverage(totals)
   return (
-    <section className="card flex flex-col p-5" aria-labelledby="queue-title">
+    <section className={composite ? 'flex min-w-0 flex-col border-t border-line/70 p-4 sm:p-5 lg:border-l lg:border-t-0 lg:p-6' : dashboard ? 'card flex h-full flex-col p-4 sm:p-5' : 'card flex flex-col p-5'} aria-labelledby="queue-title">
       <h2 id="queue-title" className="section-title">Situação da fila</h2>
-      <dl className="mt-3 divide-y divide-line">
+      <dl className={dashboard ? 'mt-2 divide-y divide-line' : 'mt-3 divide-y divide-line'}>
         {QUEUE_ROWS.map((r) => (
-          <div key={r.key} className="flex items-center justify-between gap-3 py-2.5">
+          <div key={r.key} className={dashboard ? 'flex items-center justify-between gap-3 py-2' : 'flex items-center justify-between gap-3 py-2.5'}>
             <dt className="flex items-center gap-2.5">
               <StatusGlyph status={r.status} />
               <span>
@@ -47,7 +47,7 @@ function QueueCard({ totals }: { totals: ReportData['totals'] }) {
             <dd className="numeral text-xl text-fg">{totals[r.key]}</dd>
           </div>
         ))}
-        <div className="flex items-center justify-between gap-3 py-2.5">
+        <div className={dashboard ? 'flex items-center justify-between gap-3 py-2' : 'flex items-center justify-between gap-3 py-2.5'}>
           <dt className="flex items-center gap-2.5">
             <PriorityBars priority="critical" />
             <span className="text-sm font-medium text-fg">Críticos ativos</span>
@@ -55,7 +55,7 @@ function QueueCard({ totals }: { totals: ReportData['totals'] }) {
           <dd className="numeral text-xl text-fg">{totals.critical}</dd>
         </div>
       </dl>
-      <div className="mt-auto rounded-control bg-surface-muted p-3">
+      <div className={dashboard ? 'mt-2 border-t border-line pt-3' : 'mt-auto rounded-control bg-surface-muted p-3'}>
         <p className="text-xs font-medium text-fg-muted">Tempo médio de resolução</p>
         {enoughForAverage && totals.avg_resolution_hours !== null ? (
           <p className="numeral mt-1 text-xl text-fg">
@@ -82,6 +82,8 @@ export function ReportView({
   previous,
   extra,
   collapseAnalyses = false,
+  dashboardLayout = false,
+  priorityPanel,
 }: {
   data: ReportData
   filters: ReportFilters
@@ -89,6 +91,8 @@ export function ReportView({
   previous?: ReportData | null
   extra?: ReactNode
   collapseAnalyses?: boolean
+  dashboardLayout?: boolean
+  priorityPanel?: ReactNode
 }) {
   const { totals } = data
   const range = useMemo(() => periodRange(filters), [filters])
@@ -105,14 +109,15 @@ export function ReportView({
     () => topWithOthers([...data.by_category].sort((a, b) => b.count - a.count), 8).map((r) => ({ key: r.key, label: r.key, count: r.count })),
     [data.by_category],
   )
+  const analysisChartHeight = Math.max(120, Math.max(byStatus.length, byPriority.length, byCategory.length) * 34 + 16)
   const totalTrend = previous ? computeTrend(totals.total, previous.totals.total) : null
   const resolvedTrend = previous ? computeTrend(totals.resolved, previous.totals.resolved) : null
 
   const analyses = (
       <div className="grid gap-5 lg:grid-cols-2">
-        <DistributionChart title="Por status" rows={byStatus} />
-        <DistributionChart title="Por prioridade" rows={byPriority} />
-        <DistributionChart title="Por categoria" description={data.by_category.length > 8 ? 'Categorias menores agrupadas em "Outras".' : undefined} rows={byCategory} />
+        <DistributionChart title="Por status" rows={byStatus} palette="status" height={analysisChartHeight} />
+        <DistributionChart title="Por prioridade" rows={byPriority} palette="priority" height={analysisChartHeight} />
+        <DistributionChart title="Por categoria" description={data.by_category.length > 8 ? 'Categorias menores agrupadas em "Outras".' : undefined} rows={byCategory} palette="category" height={analysisChartHeight} />
         {showAssignees && (
           <section className="card p-5" aria-label="Por responsável">
             <h2 className="section-title mb-3">Por responsável</h2>
@@ -122,10 +127,10 @@ export function ReportView({
       </div>
   )
 
-  return (
-    <div className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+  if (dashboardLayout) {
+    return (
+      <div className="flex flex-col gap-5">
+        <div className="order-1 lg:order-2">
           <OverviewPanel
             total={totals.total}
             resolved={totals.resolved}
@@ -134,9 +139,37 @@ export function ReportView({
             comparisonLabel="vs. período anterior"
             periodLabel={filters.period === 'all' ? 'todo o período' : PERIOD_LABEL[filters.period]}
             buckets={timeline}
+            dashboard
           />
         </div>
-        <QueueCard totals={totals} />
+        <div className="order-2 grid items-stretch gap-4 lg:order-1 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
+          {priorityPanel && <div className="flex min-w-0 [&>section]:h-full [&>section]:w-full">{priorityPanel}</div>}
+          <QueueCard totals={totals} dashboard />
+        </div>
+        {extra && <div className="order-3">{extra}</div>}
+        <div className="order-4">
+          {collapseAnalyses ? <AnalysesSection>{analyses}</AnalysesSection> : analyses}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="reports-overview-panel card grid overflow-hidden lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
+        <div className="min-w-0">
+          <OverviewPanel
+            total={totals.total}
+            resolved={totals.resolved}
+            totalTrend={totalTrend}
+            resolvedTrend={resolvedTrend}
+            comparisonLabel="vs. período anterior"
+            periodLabel={filters.period === 'all' ? 'todo o período' : PERIOD_LABEL[filters.period]}
+            buckets={timeline}
+            composite
+          />
+        </div>
+        <QueueCard totals={totals} composite />
       </div>
 
       {extra}
@@ -172,6 +205,7 @@ function AssigneeTable({ data }: { data: ReportData }) {
     <DataTable
       caption="Chamados por responsável"
       headers={['Responsável', 'Atribuídos', 'Resolvidos', 'Tempo médio']}
+      cellPaddingClass="py-5"
       rows={data.by_assignee.map((a) => [
         a.key,
         a.count,

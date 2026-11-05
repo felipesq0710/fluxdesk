@@ -63,6 +63,7 @@ export function authErrorMessage(error: unknown): string {
 export function dbErrorMessage(error: unknown): string {
   if (isNetworkError(error)) return NETWORK_MESSAGE
   const e = asErrorLike(error)
+  if (e.name === 'AttachmentRecoveryError') return 'A remoção do anexo ficou incompleta. Atualize a lista e tente remover novamente.'
   const message = e.message ?? ''
 
   if (/row-level security|permission denied/i.test(message) || e.code === '42501' && /^new row/i.test(message)) {

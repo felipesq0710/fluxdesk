@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut: async () => choose(null),
       requestPasswordReset: async () => ({ error: null }),
       updatePassword: async () => ({ error: null }),
+      updateEmail: async () => ({ error: new Error('Alteração de e-mail indisponível na demonstração. Nenhuma conta real está conectada.'), needsConfirmation: false }),
     }
   }, [role, choose])
 

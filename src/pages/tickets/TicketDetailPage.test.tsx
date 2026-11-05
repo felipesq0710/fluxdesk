@@ -322,4 +322,18 @@ describe('anexos', () => {
     expect(screen.getByRole('button', { name: 'Remover b.png' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Remover a.png' })).not.toBeInTheDocument()
   })
+
+  it('captura uma falha inesperada no upload, preserva os arquivos para nova tentativa e encerra o loading', async () => {
+    ticketServiceMock.getTicket.mockResolvedValue(makeTicket())
+    ticketServiceMock.uploadAttachments.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    renderDetail('requester')
+    await screen.findByLabelText('Adicionar anexos')
+    const user = userEvent.setup({ applyAccept: false })
+    await user.upload(screen.getByLabelText('Adicionar anexos'), new File(['x'], 'print.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Enviar arquivo' }))
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Falha de conexão. Verifique sua internet e tente novamente.'))
+    expect(screen.getByRole('button', { name: 'Enviar arquivo' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Remover print.png' })).toBeInTheDocument()
+  })
 })

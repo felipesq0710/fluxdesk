@@ -22,10 +22,13 @@ function RecentActivity({ userId }: { userId: string }) {
   const tickets = useTickets(RECENT, userId, {})
   const items = (tickets.data?.items ?? []).slice(0, RECENT_LIMIT)
   return (
-    <section className="card p-5" aria-labelledby="recent-title">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 id="recent-title" className="section-title">Atividade recente</h2>
-        <Link to="/chamados" className="link text-sm">Ver todos</Link>
+    <section className="card overflow-hidden" aria-labelledby="recent-title">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5 sm:px-5">
+        <div>
+          <h2 id="recent-title" className="section-title">Atividade recente</h2>
+          <p className="mt-0.5 text-xs text-fg-muted">Chamados atualizados recentemente</p>
+        </div>
+        <Link to="/chamados" className="link shrink-0 text-sm">Ver todos</Link>
       </div>
       {tickets.isPending ? (
         <p role="status" className="py-8 text-center text-sm text-fg-muted">Carregando…</p>
@@ -37,12 +40,18 @@ function RecentActivity({ userId }: { userId: string }) {
         <ul className="divide-y divide-line">
           {items.map((t) => (
             <li key={t.id}>
-              <Link to={`/chamados/${t.id}`} className="-mx-2 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-control px-2 py-2.5 hover:bg-surface-muted">
-                <span className="min-w-0 flex-1">
+              <Link to={`/chamados/${t.id}`} className="grid grid-cols-[minmax(0,1fr)] gap-2 px-4 py-3 transition-colors hover:bg-surface-muted sm:grid-cols-[minmax(0,1fr)_8rem_9.5rem] sm:items-center sm:px-5">
+                <span className="min-w-0">
                   <span className="block truncate text-sm font-medium text-fg">{t.title}</span>
                   <span className="block text-xs text-fg-muted">{t.code} · atualizado {formatRelative(t.updated_at)}</span>
                 </span>
-                <span className="flex items-center gap-3">
+                <span className="hidden items-center sm:flex">
+                  <PriorityBadge priority={t.priority} />
+                </span>
+                <span className="hidden items-center sm:flex">
+                  <StatusBadge status={t.status} />
+                </span>
+                <span className="flex items-center gap-4 sm:hidden">
                   <PriorityBadge priority={t.priority} />
                   <StatusBadge status={t.status} />
                 </span>
@@ -60,23 +69,22 @@ const ATTENTION_LIMIT = 5
 
 function AttentionCount({ label, value, to }: { label: string; value: number | undefined; to: string }) {
   return (
-    <Link to={to} className="group rounded-control px-3 py-2 hover:bg-surface-muted">
-      <span className="numeral block text-2xl text-fg">{value ?? '—'}</span>
-      <span className="block text-xs text-fg-muted group-hover:text-fg">{label}</span>
+    <Link to={to} className="group rounded-control px-2 py-1 hover:bg-surface-muted">
+      <span className="numeral block text-lg leading-none text-fg">{value ?? '—'}</span>
+      <span className="mt-1 block text-xs leading-tight text-fg-muted group-hover:text-fg">{label}</span>
     </Link>
   )
 }
 
 function ReasonTag({ reason }: { reason: AttentionReason }) {
-  const strong = reason === 'critical' || reason === 'waiting_you'
+  const tone: Record<AttentionReason, string> = {
+    critical: 'bg-danger-soft text-danger-ink',
+    unassigned: 'bg-surface-muted text-fg-muted',
+    stale: 'bg-warning-soft text-warning-ink',
+    waiting_you: 'bg-brand-soft text-brand-fg',
+  }
   return (
-    <span
-      className={
-        strong
-          ? 'rounded-full bg-sand px-2 py-0.5 text-xs font-medium text-graphite-900 ring-1 ring-inset ring-sand-400/50'
-          : 'rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-fg-muted ring-1 ring-inset ring-line'
-      }
-    >
+    <span className={`rounded-chip px-2 py-0.5 text-xs font-medium ${tone[reason]}`}>
       {ATTENTION_LABEL[reason]}
     </span>
   )
@@ -91,32 +99,32 @@ function AttentionPanel({ userId, staff }: { userId: string; staff: boolean }) {
 
   return (
     <section aria-labelledby="attention-title" className="card overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line px-5 py-4">
-        <div>
-          <h2 id="attention-title" className="font-display text-lg font-semibold tracking-tight text-fg">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 border-b border-line px-4 py-3.5 sm:px-5">
+        <div className="min-w-0 flex-1">
+          <h2 id="attention-title" className="font-display text-base font-semibold tracking-tight text-fg">
             {staff ? 'Exige atenção' : 'Aguardando você'}
           </h2>
-          <p className="text-xs text-fg-muted">
+          <p className="mt-0.5 text-xs leading-4 text-fg-muted">
             {staff ? 'Críticos, sem responsável ou sem atualização há 3 dias ou mais.' : 'Chamados que esperam uma resposta sua.'}
           </p>
         </div>
         {staff ? (
-          <div className="-mx-1 flex gap-1">
+          <div className="-mx-1 flex shrink-0 gap-1">
             <AttentionCount label="Críticos ativos" value={critical.data} to="/chamados?priority=critical" />
             <AttentionCount label="Sem responsável" value={unassigned.data} to="/chamados?assignee=none" />
           </div>
         ) : (
-          <div className="-mx-1">
+          <div className="-mx-1 shrink-0">
             <AttentionCount label="Aguardando resposta" value={waiting.data} to="/chamados?status=waiting_requester" />
           </div>
         )}
       </div>
       {tickets.isPending ? (
-        <p role="status" className="px-5 py-8 text-center text-sm text-fg-muted">Carregando…</p>
+        <p role="status" className="px-4 py-7 text-center text-sm text-fg-muted sm:px-5">Carregando…</p>
       ) : tickets.isError ? (
-        <p className="px-5 py-8 text-center text-sm text-fg-muted">Não foi possível carregar os chamados que exigem atenção.</p>
+        <p className="px-4 py-7 text-center text-sm text-fg-muted sm:px-5">Não foi possível carregar os chamados que exigem atenção.</p>
       ) : items.length === 0 ? (
-        <p className="px-5 py-8 text-center text-sm text-fg-muted">
+        <p className="px-4 py-7 text-center text-sm text-fg-muted sm:px-5">
           {staff ? 'Nada urgente por aqui. Nenhum chamado crítico, parado ou sem responsável.' : 'Nenhum chamado aguardando resposta sua.'}
         </p>
       ) : (
@@ -125,19 +133,22 @@ function AttentionPanel({ userId, staff }: { userId: string; staff: boolean }) {
             const idle = daysSince(t.updated_at)
             return (
               <li key={t.id}>
-                <Link to={`/chamados/${t.id}`} className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-5 py-3 hover:bg-surface-muted">
-                  <PriorityBars priority={t.priority} />
-                  <span className="min-w-0 flex-1 basis-56">
-                    <span className="block truncate text-sm font-medium text-fg">{t.title}</span>
-                    <span className="block break-words text-xs text-fg-muted sm:truncate">
-                      {t.code} · {t.assignee?.full_name ?? 'Sem responsável'}
-                      {idle >= 1 ? ` · sem atualização há ${idle} ${idle === 1 ? 'dia' : 'dias'}` : ` · atualizado ${formatRelative(t.updated_at)}`}
-                    </span>
+                <Link to={`/chamados/${t.id}`} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-4 py-2.5 transition-colors hover:bg-surface-muted sm:px-5">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <PriorityBars priority={t.priority} />
+                    <span className="truncate text-sm font-medium text-fg">{t.title}</span>
                   </span>
-                  <span className="flex flex-wrap gap-1.5">
+                  <span className="flex max-w-[11rem] flex-wrap justify-end gap-1.5 sm:max-w-none sm:flex-nowrap">
                     {reasons.map((r) => (
                       <ReasonTag key={r} reason={r} />
                     ))}
+                  </span>
+                  <span className="col-span-2 flex min-w-0 flex-wrap items-center gap-x-1.5 text-xs text-fg-muted">
+                    {t.code} · {t.assignee?.full_name ?? 'Sem responsável'}
+                    <span aria-hidden="true">·</span>
+                    <span className={reasons.includes('stale') ? 'text-warning-ink' : 'text-fg-muted'}>
+                      {idle >= 1 ? `Sem atualização há ${idle} ${idle === 1 ? 'dia' : 'dias'}` : `Atualizado ${formatRelative(t.updated_at)}`}
+                    </span>
                   </span>
                 </Link>
               </li>
@@ -164,7 +175,7 @@ export default function DashboardPage() {
   const categories = useCategories(false)
 
   return (
-    <div className="flex flex-col space-y-6">
+    <div className="flex flex-col space-y-5">
       <div className="order-1 flex flex-wrap items-end justify-between gap-3 md:order-none">
         <div>
           <h1 className="page-title">Dashboard</h1>
@@ -188,10 +199,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="order-4 md:order-none">
-        <AttentionPanel userId={profile.id} staff={staff} />
-      </div>
-
       <div className="order-2 md:order-none">
         <ReportFiltersBar
           filters={filters}
@@ -199,10 +206,11 @@ export default function DashboardPage() {
           onClear={clear}
           categories={categories.data ?? []}
           dirty={dirty}
+          dashboard
         />
       </div>
 
-      <div className="order-3 space-y-6 md:order-none">
+      <div className="order-3 space-y-5 md:order-none">
         <ReportStatus isLoading={report.isLoading} isError={report.isError} onRetry={() => void report.refetch()} />
         {report.data && (
           <ReportView
@@ -212,8 +220,11 @@ export default function DashboardPage() {
             previous={prevFilters ? (previous.data ?? null) : null}
             collapseAnalyses
             extra={<RecentActivity userId={profile.id} />}
+            dashboardLayout
+            priorityPanel={<AttentionPanel userId={profile.id} staff={staff} />}
           />
         )}
+        {!report.data && <AttentionPanel userId={profile.id} staff={staff} />}
       </div>
     </div>
   )

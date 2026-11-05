@@ -11,7 +11,7 @@ export default function AppLayout() {
   const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   return (
-    <div className="min-h-screen lg:pl-60">
+    <div className="min-h-screen lg:pl-64">
       <a
         href="#conteudo"
         className="sr-only z-50 rounded-control bg-brand px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -19,8 +19,8 @@ export default function AppLayout() {
         Ir para o conteúdo
       </a>
 
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-line lg:block dark:border-white/[0.06]">
-        <Sidebar role={profile.role} />
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-line lg:block">
+        <Sidebar role={profile.role} showAccount={false} />
       </aside>
 
       <MobileNav open={menuOpen} onClose={closeMenu} role={profile.role} />

@@ -6,18 +6,12 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth, useProfile } from '@/hooks/useAuth'
 import { ROLE_LABEL } from '@/lib/constants'
 import { authErrorMessage } from '@/lib/errors'
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  const first = parts[0]?.[0] ?? '?'
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : ''
-  return (first + last).toUpperCase()
-}
+import { Avatar } from '@/components/ui/Avatar'
 
 const ITEM =
-  'flex min-h-[2.25rem] w-full items-center gap-2.5 rounded-control px-2.5 py-1.5 text-sm text-fg transition-colors duration-120 hover:bg-surface-muted'
+  'flex min-h-10 w-full items-center gap-2.5 rounded-control px-2.5 py-2 text-sm text-fg transition-colors duration-120 hover:bg-surface-muted'
 
-export function AccountMenu({ onNavigate }: { onNavigate?: () => void }) {
+export function AccountMenu({ onNavigate, placement = 'above' }: { onNavigate?: () => void; placement?: 'above' | 'below' }) {
   const profile = useProfile()
   const { signOut } = useAuth()
   const { theme, toggleTheme } = useTheme()
@@ -63,11 +57,9 @@ export function AccountMenu({ onNavigate }: { onNavigate?: () => void }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex w-full items-center gap-2.5 rounded-control p-2 text-left transition-colors duration-120 hover:bg-surface-muted dark:hover:bg-white/[0.07] dark:focus-visible:outline-sand"
+        className="flex w-full items-center gap-2.5 rounded-control p-2 text-left transition-colors duration-120 hover:bg-surface-muted"
       >
-        <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sand text-xs font-bold text-graphite-900 ring-1 ring-inset ring-sand-400/60">
-          {initials(profile.full_name)}
-        </span>
+        <Avatar name={profile.full_name} profileId={profile.id} size="md" />
         <span className="min-w-0 flex-1 leading-tight">
           <span className="block truncate text-[0.84375rem] font-medium text-fg">{profile.full_name}</span>
           <span className="block truncate text-xs text-fg-muted">{ROLE_LABEL[profile.role]}</span>
@@ -77,7 +69,9 @@ export function AccountMenu({ onNavigate }: { onNavigate?: () => void }) {
       </button>
 
       {open && (
-        <div className="absolute inset-x-0 bottom-full z-30 mb-2 animate-pop-in rounded-pop border border-line bg-surface-raised p-1.5 text-fg shadow-pop">
+        <div className={placement === 'below'
+          ? 'absolute right-0 top-full z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] animate-pop-in rounded-pop border border-line bg-surface-raised p-1.5 text-fg shadow-pop'
+          : 'absolute inset-x-0 bottom-full z-30 mb-2 animate-pop-in rounded-pop border border-line bg-surface-raised p-1.5 text-fg shadow-pop'}>
           <div className="border-b border-line px-2.5 pb-2 pt-1.5">
             <p className="truncate text-sm font-medium text-fg">{profile.full_name}</p>
             <p className="truncate text-xs text-fg-muted">{profile.email}</p>

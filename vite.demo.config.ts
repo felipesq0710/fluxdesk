@@ -34,6 +34,7 @@ export default defineConfig({
       swap('services/settings', 'demo/services/settings.ts'),
       swap('services/categories', 'demo/services/categories.ts'),
       swap('services/profiles', 'demo/services/profiles.ts'),
+      swap('services/profileAvatars', 'demo/services/profileAvatars.ts'),
       swap('services/articles', 'demo/services/articles.ts'),
       swap('services/reports', 'demo/services/reports.ts'),
       { find: '@', replacement: src('') },

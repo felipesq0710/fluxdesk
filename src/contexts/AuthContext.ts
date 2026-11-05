@@ -26,6 +26,7 @@ export interface AuthContextValue {
   signOut: () => Promise<void>
   requestPasswordReset: (email: string) => Promise<AuthResult>
   updatePassword: (password: string) => Promise<AuthResult>
+  updateEmail: (email: string) => Promise<AuthResult & { needsConfirmation: boolean }>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

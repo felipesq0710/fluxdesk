@@ -35,6 +35,7 @@ export function makeAuth(overrides: Partial<AuthContextValue> = {}): AuthContext
     signOut: vi.fn().mockResolvedValue(undefined),
     requestPasswordReset: vi.fn().mockResolvedValue({ error: null }),
     updatePassword: vi.fn().mockResolvedValue({ error: null }),
+    updateEmail: vi.fn().mockResolvedValue({ error: null, needsConfirmation: false }),
     ...overrides,
   }
 }

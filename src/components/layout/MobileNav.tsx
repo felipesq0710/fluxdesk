@@ -30,13 +30,13 @@ export function MobileNav({ open, onClose, role }: { open: boolean; onClose: () 
 
   return (
     <div className="fixed inset-0 z-40 lg:hidden">
-      <div className="absolute inset-0 animate-fade-in bg-graphite-950/60 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 animate-fade-in bg-black/55" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="Menu de navegação"
-        className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] animate-slide-in flex-col shadow-pop"
+        className="absolute inset-y-0 left-0 flex w-80 max-w-[88vw] animate-slide-in flex-col border-r border-line bg-canvas"
       >
         <button
           type="button"

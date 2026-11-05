@@ -51,10 +51,12 @@ export function DataTable({
   caption,
   headers,
   rows,
+  cellPaddingClass = 'py-2',
 }: {
   caption: string
   headers: string[]
   rows: (string | number)[][]
+  cellPaddingClass?: string
 }) {
   return (
     <div className="max-h-72 overflow-auto">
@@ -63,7 +65,7 @@ export function DataTable({
         <thead>
           <tr className="border-b border-line text-left text-xs text-fg-muted">
             {headers.map((h, i) => (
-              <th key={h} scope="col" className={cn('py-2 pr-3 font-medium', i > 0 && 'text-right')}>
+            <th key={h} scope="col" className={cn(cellPaddingClass, 'pr-3 font-medium', i > 0 && 'text-right')}>
                 {h}
               </th>
             ))}
@@ -74,11 +76,11 @@ export function DataTable({
             <tr key={r} className="border-b border-line/60 last:border-0">
               {row.map((cell, i) =>
                 i === 0 ? (
-                  <th key={i} scope="row" className="py-2 pr-3 text-left font-normal text-fg">
+                  <th key={i} scope="row" className={cn(cellPaddingClass, 'pr-3 text-left font-normal text-fg')}>
                     {cell}
                   </th>
                 ) : (
-                  <td key={i} className="py-2 pr-3 text-right tabular-nums text-fg">
+                  <td key={i} className={cn(cellPaddingClass, 'pr-3 text-right tabular-nums text-fg')}>
                     {cell}
                   </td>
                 ),

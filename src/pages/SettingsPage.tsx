@@ -1,8 +1,12 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
+import { Camera, Monitor, Moon, Sun, Trash2 } from 'lucide-react'
+import { z } from 'zod'
 import { Alert } from '@/components/ui/Alert'
+import { Avatar } from '@/components/ui/Avatar'
 import { PasswordField } from '@/components/ui/PasswordField'
 import { SelectField } from '@/components/ui/SelectField'
 import { Spinner } from '@/components/ui/Spinner'
@@ -15,6 +19,11 @@ import { authErrorMessage, dbErrorMessage } from '@/lib/errors'
 import { isAdmin } from '@/lib/permissions'
 import { changePasswordSchema, profileNameSchema, type ChangePasswordValues, type ProfileNameValues } from '@/schemas/settings'
 import { updateOwnName } from '@/services/profiles'
+import { PROFILE_AVATAR_MAX_BYTES, PROFILE_AVATAR_MIME_TYPES, removeProfileAvatar, uploadProfileAvatar } from '@/services/profileAvatars'
+import { useProfileAvatar } from '@/hooks/useProfileAvatar'
+
+const profileEmailSchema = z.object({ email: z.email('Informe um endereço de e-mail válido.') })
+type ProfileEmailValues = z.infer<typeof profileEmailSchema>
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
@@ -36,20 +45,29 @@ const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
 
 function AppearanceSection() {
   const { preference, setPreference } = useTheme()
+  const icons = { system: Monitor, light: Sun, dark: Moon }
+  const descriptions = { system: 'Respeita o dispositivo', light: 'Fundo claro', dark: 'Fundo escuro' }
   return (
     <Section title="Aparência" description="Fica salvo apenas neste navegador.">
       <fieldset>
         <legend className="sr-only">Tema da interface</legend>
-        <div className="flex flex-wrap gap-2">
-          {THEME_OPTIONS.map((o) => (
-            <label
-              key={o.value}
-              className="flex min-h-[2.5rem] cursor-pointer items-center gap-2 rounded-control border border-line px-3 py-2 text-sm has-[:checked]:border-brand has-[:checked]:bg-brand-100 dark:has-[:checked]:bg-brand/15"
-            >
-              <input type="radio" name="theme" value={o.value} checked={preference === o.value} onChange={() => setPreference(o.value)} />
-              {o.label}
-            </label>
-          ))}
+        <div className="grid gap-2 md:grid-cols-3">
+          {THEME_OPTIONS.map((o) => {
+            const Icon = icons[o.value]
+            return (
+              <label
+                key={o.value}
+                className="group flex min-h-[3.5rem] cursor-pointer items-center gap-3 rounded-control border border-line px-3 py-2.5 text-sm transition-colors hover:bg-surface-muted has-[:checked]:border-brand has-[:checked]:bg-brand-soft has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand"
+              >
+                <input type="radio" aria-label={o.label} className="accent-brand-action" name="theme" value={o.value} checked={preference === o.value} onChange={() => setPreference(o.value)} />
+                <Icon className="h-4 w-4 text-fg-muted" aria-hidden="true" />
+                <span className="min-w-0">
+                  <span className="block font-medium text-fg">{o.label}</span>
+                  <span className="block text-xs text-fg-muted">{descriptions[o.value]}</span>
+                </span>
+              </label>
+            )
+          })}
         </div>
       </fieldset>
     </Section>
@@ -58,14 +76,34 @@ function AppearanceSection() {
 
 function ProfileSection() {
   const profile = useProfile()
-  const { refetchProfile } = useAuth()
+  const { refetchProfile, updateEmail } = useAuth()
+  const queryClient = useQueryClient()
+  const nameInput = useRef<HTMLInputElement>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [emailNotice, setEmailNotice] = useState<string | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [photoPending, setPhotoPending] = useState(false)
+  const avatarQuery = useProfileAvatar(profile.id)
+  const emailForm = useForm<ProfileEmailValues>({
+    resolver: zodResolver(profileEmailSchema),
+    defaultValues: { email: profile.email },
+  })
+  const currentEmail = useWatch({ control: emailForm.control, name: 'email' })
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting, isDirty },
     reset,
   } = useForm<ProfileNameValues>({ resolver: zodResolver(profileNameSchema), defaultValues: { fullName: profile.full_name } })
+  const fullNameRegistration = register('fullName')
+
+  useEffect(() => () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+  }, [previewUrl])
 
   async function onSubmit(values: ProfileNameValues) {
     setError(null)
@@ -79,29 +117,140 @@ function ProfileSection() {
     }
   }
 
+  function onChoosePhoto(file?: File) {
+    setPhotoError(null)
+    if (!file) return
+    if (!(PROFILE_AVATAR_MIME_TYPES as readonly string[]).includes(file.type)) {
+      setPhotoError('Use uma imagem JPEG, PNG ou WebP.')
+      if (fileInput.current) fileInput.current.value = ''
+      return
+    }
+    if (file.size > PROFILE_AVATAR_MAX_BYTES) {
+      setPhotoError('A foto deve ter no máximo 5 MB.')
+      if (fileInput.current) fileInput.current.value = ''
+      return
+    }
+    setSelectedPhoto(file)
+    setPreviewUrl(URL.createObjectURL(file))
+  }
+
+  async function savePhoto() {
+    if (!selectedPhoto) return
+    setPhotoError(null)
+    setPhotoPending(true)
+    try {
+      await uploadProfileAvatar(profile.id, selectedPhoto)
+      setSelectedPhoto(null)
+      setPreviewUrl(null)
+      if (fileInput.current) fileInput.current.value = ''
+      await queryClient.invalidateQueries({ queryKey: ['profile-avatar', profile.id] })
+      toast.success('Foto de perfil atualizada.')
+    } catch (e) {
+      setPhotoError(e instanceof Error && /indisponível na demonstração/i.test(e.message) ? e.message : dbErrorMessage(e))
+    } finally {
+      setPhotoPending(false)
+    }
+  }
+
+  async function deletePhoto() {
+    setPhotoError(null)
+    setPhotoPending(true)
+    try {
+      await removeProfileAvatar(profile.id)
+      setSelectedPhoto(null)
+      setPreviewUrl(null)
+      if (fileInput.current) fileInput.current.value = ''
+      await queryClient.invalidateQueries({ queryKey: ['profile-avatar', profile.id] })
+      toast.success('Foto removida. As iniciais serão exibidas.')
+    } catch (e) {
+      setPhotoError(e instanceof Error && /indisponível na demonstração/i.test(e.message) ? e.message : dbErrorMessage(e))
+    } finally {
+      setPhotoPending(false)
+    }
+  }
+
+  async function onEmailSubmit(values: ProfileEmailValues) {
+    setEmailError(null)
+    setEmailNotice(null)
+    const result = await updateEmail(values.email)
+    if (result.error) {
+      setEmailError(result.error instanceof Error && /indisponível na demonstração/i.test(result.error.message) ? result.error.message : authErrorMessage(result.error))
+      return
+    }
+    if (result.needsConfirmation) {
+      setEmailNotice('Pedido enviado. Confirme a alteração no novo endereço; o e-mail atual continuará ativo até a confirmação.')
+      return
+    }
+    setEmailNotice('E-mail de acesso atualizado.')
+  }
+
   return (
-    <Section title="Perfil">
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-        {error && <Alert variant="danger">{error}</Alert>}
-        <TextField label="Nome completo" required maxLength={120} error={errors.fullName?.message} {...register('fullName')} />
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-fg-muted">E-mail</dt>
-            <dd className="text-fg">{profile.email}</dd>
+    <section className="card overflow-hidden" aria-labelledby="sec-Perfil">
+      <div className="border-b border-line px-5 py-4 sm:px-6">
+        <h2 id="sec-Perfil" className="text-base font-semibold text-fg">Perfil</h2>
+        <p className="mt-1 text-sm text-fg-muted">Identificação e informações da sua conta.</p>
+      </div>
+      <div className="p-5 sm:p-6">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <Avatar name={profile.full_name} profileId={profile.id} imageUrl={previewUrl ?? avatarQuery.data} size="lg" className="ring-4 ring-brand-soft" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg font-semibold text-fg">{profile.full_name}</p>
+            <p className="truncate text-sm text-fg-muted">{profile.email}</p>
+            <span className="mt-2 inline-flex rounded-chip bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand-fg">{ROLE_LABEL[profile.role]}</span>
           </div>
-          <div>
-            <dt className="text-fg-muted">Perfil de acesso</dt>
-            <dd className="text-fg">{ROLE_LABEL[profile.role]}</dd>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="Selecionar foto de perfil" onChange={(event) => onChoosePhoto(event.target.files?.[0])} />
+            <button type="button" className="btn-secondary" onClick={() => fileInput.current?.click()}>
+              <Camera className="h-4 w-4" aria-hidden="true" />
+              {avatarQuery.data ? 'Alterar foto' : 'Adicionar foto'}
+            </button>
+            {selectedPhoto && <button type="button" className="btn-primary" disabled={photoPending} onClick={() => void savePhoto()}>{photoPending && <Spinner />}Salvar foto</button>}
+            {(avatarQuery.data || selectedPhoto) && <button type="button" className="btn-ghost" disabled={photoPending} onClick={() => void deletePhoto()}><Trash2 className="h-4 w-4" aria-hidden="true" />Remover</button>}
           </div>
-        </dl>
-        <div className="flex justify-end">
-          <button type="submit" className="btn-primary" disabled={isSubmitting || !isDirty}>
-            {isSubmitting && <Spinner />}
-            Salvar nome
-          </button>
         </div>
-      </form>
-    </Section>
+        {photoError && <Alert variant="danger" className="mb-4">{photoError}</Alert>}
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 pt-5">
+          {error && <Alert variant="danger">{error}</Alert>}
+          <TextField
+            id="profile-name"
+            label="Nome completo"
+            required
+            maxLength={120}
+            error={errors.fullName?.message}
+            {...fullNameRegistration}
+            ref={(element) => {
+              fullNameRegistration.ref(element)
+              nameInput.current = element
+            }}
+          />
+          <div className="flex justify-end">
+            <button type="submit" className="btn-primary disabled:opacity-100 disabled:text-fg-muted" disabled={isSubmitting || !isDirty}>
+              {isSubmitting && <Spinner />}
+              Salvar nome
+            </button>
+          </div>
+        </form>
+        <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} noValidate className="space-y-4 border-t border-line pt-5">
+          {emailError && <Alert variant="danger">{emailError}</Alert>}
+          {emailNotice && <Alert variant="info">{emailNotice}</Alert>}
+          <TextField
+            id="profile-email"
+            label="E-mail de acesso"
+            type="email"
+            required
+            autoComplete="email"
+            error={emailForm.formState.errors.email?.message}
+            {...emailForm.register('email')}
+          />
+          <div className="flex justify-end">
+            <button type="submit" className="btn-secondary disabled:opacity-100 disabled:text-fg" disabled={emailForm.formState.isSubmitting || currentEmail.trim().toLowerCase() === profile.email.toLowerCase()}>
+              {emailForm.formState.isSubmitting && <Spinner />}
+              Atualizar e-mail
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
   )
 }
 
@@ -196,7 +345,7 @@ function SystemSection() {
           ))}
         </SelectField>
         <div className="flex justify-end">
-          <button type="button" className="btn-primary" disabled={!dirty || update.isPending} onClick={() => void save()}>
+          <button type="button" className="btn-primary disabled:opacity-100 disabled:text-fg-muted" disabled={!dirty || update.isPending} onClick={() => void save()}>
             {update.isPending && <Spinner />}
             Salvar configurações
           </button>
@@ -209,12 +358,17 @@ function SystemSection() {
 export default function SettingsPage() {
   const profile = useProfile()
   return (
-    <div className="max-w-5xl space-y-4">
-      <h1 className="page-title">Configurações</h1>
-      <AppearanceSection />
-      <ProfileSection />
-      <PasswordSection />
-      {isAdmin(profile.role) && <SystemSection />}
+    <div className="space-y-5">
+      <header>
+        <h1 className="page-title">Configurações</h1>
+        <p className="page-lead">Gerencie sua conta, segurança e preferências do Fluxdesk.</p>
+      </header>
+      <div className="space-y-4">
+        <ProfileSection />
+        <PasswordSection />
+        <AppearanceSection />
+        {isAdmin(profile.role) && <SystemSection />}
+      </div>
     </div>
   )
 }

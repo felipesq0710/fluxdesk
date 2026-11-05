@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { safeStorageName } from '@/lib/attachments'
+import { deleteAttachmentSafely } from '@/lib/attachmentDeletion'
 import {
   DEFAULT_FILTERS,
   PAGE_SIZE,
@@ -266,10 +267,36 @@ export async function getAttachmentUrl(storagePath: string, fileName: string): P
   return data.signedUrl
 }
 
-export async function deleteAttachment(attachment: Pick<TicketAttachment, 'id' | 'storage_path'>): Promise<void> {
-  // Remove primeiro o arquivo (a política de Storage depende do registro de metadados).
-  const { error: storageError } = await supabase.storage.from(ATTACHMENTS_BUCKET).remove([attachment.storage_path])
-  if (storageError) throw storageError
-  const { error } = await supabase.from('ticket_attachments').delete().eq('id', attachment.id)
-  if (error) throw error
+function isMissingStorageObject(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const candidate = error as { status?: number; statusCode?: string; message?: string }
+  return candidate.status === 404 || candidate.statusCode === '404' || /object not found/i.test(candidate.message ?? '')
+}
+
+export async function deleteAttachment(attachment: Pick<TicketAttachment, 'id' | 'storage_path' | 'mime_type'>): Promise<void> {
+  const bucket = supabase.storage.from(ATTACHMENTS_BUCKET)
+  await deleteAttachmentSafely({
+    readObject: async () => {
+      const { data, error } = await bucket.download(attachment.storage_path)
+      if (error) throw error
+      if (!data) throw new Error('O arquivo do anexo não foi retornado pelo Storage.')
+      return data
+    },
+    removeObject: async () => {
+      const { error } = await bucket.remove([attachment.storage_path])
+      if (error) throw error
+    },
+    deleteRecord: async () => {
+      const { error } = await supabase.from('ticket_attachments').delete().eq('id', attachment.id)
+      if (error) throw error
+    },
+    restoreObject: async (snapshot) => {
+      const { error } = await bucket.upload(attachment.storage_path, snapshot, {
+        upsert: true,
+        contentType: attachment.mime_type,
+      })
+      if (error) throw error
+    },
+    isObjectMissing: isMissingStorageObject,
+  })
 }

@@ -1,4 +1,3 @@
-import { Fragment } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import {
   Bell,
@@ -31,36 +30,40 @@ const ICONS: Record<NavKey, LucideIcon> = {
   settings: Settings,
 }
 
-const GROUPS: NavKey[][] = [
-  ['dashboard', 'tickets', 'queue', 'notifications', 'knowledge'],
-  ['reports', 'users', 'categories'],
-  ['settings'],
+const GROUPS: { label: string; items: NavKey[] }[] = [
+  { label: 'Atendimento', items: ['dashboard', 'tickets', 'queue', 'notifications', 'knowledge'] },
+  { label: 'Gestão', items: ['reports', 'users', 'categories'] },
+  { label: 'Sistema', items: ['settings'] },
 ]
 
-export function Sidebar({ role, onNavigate }: { role: UserRole; onNavigate?: () => void }) {
+export function Sidebar({ role, onNavigate, showAccount = true }: { role: UserRole; onNavigate?: () => void; showAccount?: boolean }) {
   const items = navItemsFor(role)
   const unread = useUnreadCount().data ?? 0
-  const groups = GROUPS.map((keys) => keys.map((k) => items.find((i) => i.key === k)).filter((i) => i !== undefined)).filter((g) => g.length > 0)
+  const groups = GROUPS.map((group) => ({
+    ...group,
+    items: group.items.map((key) => items.find((item) => item.key === key)).filter((item) => item !== undefined),
+  })).filter((group) => group.items.length > 0)
 
   return (
-    <div className="flex h-full flex-col bg-surface text-fg-muted dark:bg-graphite-950 dark:text-graphite-300">
-      <div className="flex h-16 shrink-0 items-center px-5">
+    <div className="flex h-full flex-col bg-canvas text-fg-muted">
+      <div className="flex min-h-[4.75rem] shrink-0 items-center border-b border-line px-5">
         <Link
           to="/"
           onClick={onNavigate}
           aria-label="Fluxdesk — ir para o início"
           className="rounded-control transition-opacity hover:opacity-80"
         >
-          <Logo />
+          <Logo showSlogan />
         </Link>
       </div>
 
-      <nav aria-label="Navegação principal" className="flex-1 overflow-y-auto px-3 pb-3 pt-2">
-        {groups.map((group, gi) => (
-          <Fragment key={gi}>
-            {gi > 0 && <div role="presentation" className="mx-3 my-3 h-px bg-line dark:bg-white/[0.07]" />}
-            <ul className="space-y-0.5">
-              {group.map((item) => {
+      <nav aria-label="Navegação principal" className="flex-1 overflow-y-auto px-3 pb-5 pt-5">
+        <div className="space-y-6">
+          {groups.map((group) => (
+            <div key={group.label}>
+              <h2 className="mb-2 px-3 text-xs font-medium leading-5 text-fg-subtle">{group.label}</h2>
+              <ul className="space-y-1">
+                {group.items.map((item) => {
                 const Icon = ICONS[item.key]
                 const count = item.key === 'notifications' ? unread : 0
                 return (
@@ -71,22 +74,22 @@ export function Sidebar({ role, onNavigate }: { role: UserRole; onNavigate?: () 
                       onClick={onNavigate}
                       className={({ isActive }) =>
                         cn(
-                          'group relative flex min-h-[2.25rem] items-center gap-3 rounded-control px-3 py-1.5 text-[0.84375rem] font-medium transition-colors duration-120 dark:focus-visible:outline-sand',
+                          'group relative flex min-h-10 items-center gap-3 rounded-control px-3 py-2 text-sm font-medium transition-colors duration-120',
                           isActive
-                            ? 'bg-surface-muted text-fg dark:bg-white/[0.09] dark:text-white'
-                            : 'hover:bg-line/80 hover:text-fg dark:hover:bg-white/[0.06] dark:hover:text-white',
+                            ? 'bg-brand-soft text-fg'
+                            : 'hover:bg-surface-muted hover:text-fg',
                         )
                       }
                     >
                       {({ isActive }) => (
                         <>
-                          {isActive && <span aria-hidden="true" className="absolute -left-3 top-2 h-5 w-[3px] rounded-r-full bg-brand dark:bg-sand" />}
-                          <Icon className={cn('h-[1.0625rem] w-[1.0625rem] shrink-0 transition-colors', isActive ? 'text-fg dark:text-sand' : 'text-fg-subtle group-hover:text-fg dark:text-graphite-400 dark:group-hover:text-graphite-200')} aria-hidden="true" />
+                          {isActive && <span aria-hidden="true" className="absolute left-0 top-2.5 h-5 w-0.5 rounded-full bg-brand-action" />}
+                          <Icon className={cn('h-[1.0625rem] w-[1.0625rem] shrink-0 transition-colors', isActive ? 'text-brand-action' : 'text-fg-subtle group-hover:text-fg')} aria-hidden="true" />
                           <span className="truncate">{item.label}</span>
                           {count > 0 && (
                             <span
                               aria-hidden="true"
-                              className="ml-auto flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-graphite-800 px-1 text-2xs font-bold leading-none text-white dark:bg-sand dark:text-graphite-900"
+                              className="ml-auto flex h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-brand-action px-1 text-2xs font-semibold leading-none text-white"
                             >
                               {count > 99 ? '99+' : count}
                             </span>
@@ -97,14 +100,13 @@ export function Sidebar({ role, onNavigate }: { role: UserRole; onNavigate?: () 
                   </li>
                 )
               })}
-            </ul>
-          </Fragment>
-        ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </nav>
 
-      <div className="shrink-0 border-t border-line p-3 dark:border-white/[0.07]">
-        <AccountMenu onNavigate={onNavigate} />
-      </div>
+      {showAccount && <div className="shrink-0 border-t border-line p-3"><AccountMenu onNavigate={onNavigate} /></div>}
     </div>
   )
 }

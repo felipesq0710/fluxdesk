@@ -93,6 +93,19 @@ describe('abertura de chamado', () => {
     expect(await screen.findByText('detalhe do chamado')).toBeInTheDocument()
   })
 
+  it('captura uma rejeição inesperada do upload sem tentar criar o chamado de novo', async () => {
+    ticketServiceMock.uploadAttachments.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    renderNew()
+    await fillValid()
+    const user = userEvent.setup({ applyAccept: false })
+    await user.upload(screen.getByLabelText('Anexos'), new File(['x'], 'print.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Abrir chamado' }))
+
+    await waitFor(() => expect(toast.warning).toHaveBeenCalledWith(expect.stringContaining('Falha de conexão')))
+    expect(ticketServiceMock.createTicket).toHaveBeenCalledTimes(1)
+    expect(await screen.findByText('detalhe do chamado')).toBeInTheDocument()
+  })
+
   it('exibe o erro do banco e permanece no formulário', async () => {
     ticketServiceMock.createTicket.mockRejectedValue({ code: '23514', message: 'Categoria inválida ou inativa.' })
     renderNew()

@@ -38,15 +38,21 @@ export function AttachmentsPanel({ ticket, actor }: { ticket: Ticket; actor: Act
 
   async function handleUpload() {
     if (files.length === 0) return
-    const outcome = await upload.mutateAsync({ uploaderId: actor.id, files })
-    if (outcome.uploaded > 0) toast.success(outcome.uploaded === 1 ? 'Arquivo enviado.' : `${outcome.uploaded} arquivos enviados.`)
-    if (outcome.failed.length > 0) {
-      toast.error(`Não foi possível enviar: ${outcome.failed.map((f) => f.name).join(', ')}.`)
-      // Mantém na seleção apenas os que falharam, para nova tentativa.
-      const failedNames = new Set(outcome.failed.map((f) => f.name))
-      setFiles(files.filter((f) => failedNames.has(f.name)))
-    } else {
-      setFiles([])
+    const attemptedFiles = files
+    try {
+      const outcome = await upload.mutateAsync({ uploaderId: actor.id, files: attemptedFiles })
+      if (outcome.uploaded > 0) toast.success(outcome.uploaded === 1 ? 'Arquivo enviado.' : `${outcome.uploaded} arquivos enviados.`)
+      if (outcome.failed.length > 0) {
+        toast.error(`Não foi possível enviar: ${outcome.failed.map((f) => f.name).join(', ')}.`)
+        // Mantém na seleção apenas os que falharam, para nova tentativa.
+        const failedNames = new Set(outcome.failed.map((f) => f.name))
+        setFiles((current) => current.filter((file) => failedNames.has(file.name)))
+      } else {
+        setFiles((current) => current.filter((file) => !attemptedFiles.includes(file)))
+      }
+    } catch (error) {
+      // A seleção é preservada para que o usuário possa tentar novamente.
+      toast.error(dbErrorMessage(error))
     }
   }
 

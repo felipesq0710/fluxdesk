@@ -1,4 +1,4 @@
-import { db } from '@/demo/store'
+import { db, DEMO_USERS } from '@/demo/store'
 import { sanitizeSearch } from '@/lib/ticketFilters'
 import type { Profile, UserRole } from '@/types/domain'
 
@@ -60,4 +60,6 @@ export async function setUserActive(id: string, isActive: boolean): Promise<void
 export async function updateOwnName(id: string, fullName: string): Promise<void> {
   const p = db.people.find((x) => x.id === id)
   if (p) p.full_name = fullName
+  const signedInProfile = Object.values(DEMO_USERS).find((x) => x.id === id)
+  if (signedInProfile) signedInProfile.full_name = fullName
 }

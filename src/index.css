@@ -6,10 +6,12 @@
 @tailwind utilities;
 
 :root {
+  /* Light theme tokens: neutral surfaces, cobalt for identity and key actions. */
   --canvas: 246 246 248;
   --surface: 255 255 255;
   --surface-muted: 241 242 245;
   --surface-raised: 255 255 255;
+  --surface-overlay: 255 255 255;
   --line: 229 231 236;
   --line-strong: 211 214 222;
 
@@ -17,56 +19,188 @@
   --fg-muted: 86 92 105;
   --fg-subtle: 107 113 128;
 
+  --brand-action: 0 56 255;
+  --brand-action-hover: 0 46 219;
+  --brand-action-active: 0 38 179;
+
   --brand-fg: 0 56 255;
   --brand-soft: 234 239 255;
   --ring: 0 56 255;
 
+  --info: 0 56 255;
+  --info-soft: 234 239 255;
+  --info-ink: 0 45 190;
+  --success: 22 122 74;
+  --success-soft: 229 245 235;
+  --success-ink: 20 92 58;
+  --warning: 149 88 0;
+  --warning-soft: 255 246 224;
+  --warning-ink: 117 67 0;
+  --danger: 179 38 43;
+  --danger-soft: 255 237 237;
+  --danger-ink: 145 28 34;
+  --danger-action: 179 38 43;
+  --danger-action-hover: 155 31 36;
+  --danger-action-active: 133 26 31;
+  --disabled-bg: 241 242 245;
+  --disabled-fg: 107 113 128;
+
   --chart-1: #0038ff;
-  --chart-2: #c2570c;
-  --chart-grid: #e6e7ec;
-  --chart-axis: #565c69;
+  --chart-2: #a65316;
+  --chart-grid: #e4e7ec;
+  --chart-axis: #626b78;
   --chart-cursor: rgb(20 22 27 / 0.05);
   --chart-bar: #0038ff;
-  --chart-neutral: #646c7e;
+  --chart-neutral: #657184;
+
+  /* Cobalt light on analytical surfaces; the main surface remains theme-specific. */
+  --dashboard-chart-primary: 36 87 255;
+  --dashboard-chart-status-open: 36 87 255;
+  --dashboard-chart-status-progress: 0 143 190;
+  --dashboard-chart-status-waiting-requester: 190 98 19;
+  --dashboard-chart-status-waiting-third-party: 220 125 33;
+  --dashboard-chart-status-resolved: 25 126 71;
+  --dashboard-chart-status-closed: 112 122 139;
+  --dashboard-chart-priority-low: 112 122 139;
+  --dashboard-chart-priority-medium: 36 87 255;
+  --dashboard-chart-priority-high: 190 98 19;
+  --dashboard-chart-priority-critical: 180 35 43;
+  --dashboard-chart-category-hardware: 36 87 255;
+  --dashboard-chart-category-software: 112 78 173;
+  --dashboard-chart-category-access: 0 142 174;
+  --dashboard-chart-category-network: 184 91 10;
+  --dashboard-chart-category-other: 103 122 110;
 
   --shadow-xs: 0 1px 1px rgb(20 22 27 / 0.04);
-  --shadow-card: 0 1px 0 rgb(20 22 27 / 0.03), 0 1px 3px rgb(20 22 27 / 0.06);
-  --shadow-pop: 0 0 0 1px rgb(20 22 27 / 0.06), 0 8px 24px -6px rgb(20 22 27 / 0.18), 0 2px 6px rgb(20 22 27 / 0.06);
+  --shadow-card: none;
+  --shadow-pop: 0 12px 28px -8px rgb(20 22 27 / 0.2), 0 2px 6px rgb(20 22 27 / 0.08);
+  --focus-ring: 0 0 0 3px rgb(var(--ring) / 0.24);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --page-gutter: 1rem;
+  --panel-gap: 1rem;
+  --section-gap: 1.5rem;
+
+  --radius-card: 0.75rem;
+  --radius-control: 0.5rem;
+  --radius-pop: 0.75rem;
+  --radius-chip: 999px;
 
   --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23565c69' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   color-scheme: light;
 }
 
 .dark {
-  --canvas: 13 15 19;
-  --surface: 20 23 28;
-  --surface-muted: 26 30 37;
-  --surface-raised: 28 32 40;
-  --line: 38 43 53;
-  --line-strong: 53 60 73;
+  /* Neutral dark surfaces; the blue stays on identity, actions and data. */
+  --canvas: 11 13 16;
+  --surface: 17 20 24;
+  --surface-muted: 25 29 34;
+  --surface-raised: 29 33 39;
+  --surface-overlay: 34 38 45;
+  --line: 39 44 51;
+  --line-strong: 61 69 80;
 
-  --fg: 236 238 243;
-  --fg-muted: 163 170 184;
-  --fg-subtle: 133 141 156;
+  --fg: 240 243 247;
+  --fg-muted: 180 187 197;
+  --fg-subtle: 150 158 170;
 
   --brand-fg: 140 166 255;
-  --brand-soft: 17 27 66;
+  --brand-soft: 24 35 73;
   --ring: 124 151 255;
 
+  --info: 140 166 255;
+  --info-soft: 24 35 73;
+  --info-ink: 185 200 255;
+  --success: 89 201 137;
+  --success-soft: 22 47 32;
+  --success-ink: 136 224 172;
+  --warning: 238 181 83;
+  --warning-soft: 53 41 20;
+  --warning-ink: 247 203 126;
+  --danger: 243 119 123;
+  --danger-soft: 54 29 32;
+  --danger-ink: 255 166 169;
+  --danger-action: 179 38 43;
+  --danger-action-hover: 155 31 36;
+  --danger-action-active: 133 26 31;
+  --disabled-bg: 35 39 46;
+  --disabled-fg: 150 158 170;
+
   --chart-1: #5b7cff;
-  --chart-2: #d8733a;
-  --chart-grid: #262b35;
-  --chart-axis: #a3aab8;
+  --chart-2: #d58b5b;
+  --chart-grid: #292e35;
+  --chart-axis: #b4bbc5;
   --chart-cursor: rgb(255 255 255 / 0.06);
   --chart-bar: #5b7cff;
-  --chart-neutral: #7f89a0;
+  --chart-neutral: #8d98a8;
+
+  --dashboard-chart-primary: 36 87 255;
+  --dashboard-chart-status-open: 120 151 255;
+  --dashboard-chart-status-progress: 95 203 227;
+  --dashboard-chart-status-waiting-requester: 245 177 105;
+  --dashboard-chart-status-waiting-third-party: 220 130 54;
+  --dashboard-chart-status-resolved: 91 207 139;
+  --dashboard-chart-status-closed: 150 161 178;
+  --dashboard-chart-priority-low: 150 161 178;
+  --dashboard-chart-priority-medium: 120 151 255;
+  --dashboard-chart-priority-high: 245 177 105;
+  --dashboard-chart-priority-critical: 255 119 123;
+  --dashboard-chart-category-hardware: 120 151 255;
+  --dashboard-chart-category-software: 184 160 235;
+  --dashboard-chart-category-access: 95 203 227;
+  --dashboard-chart-category-network: 245 177 105;
+  --dashboard-chart-category-other: 145 181 155;
 
   --shadow-xs: none;
-  --shadow-card: 0 0 0 1px rgb(255 255 255 / 0.02);
-  --shadow-pop: 0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 32px -8px rgb(0 0 0 / 0.65);
+  --shadow-card: none;
+  --shadow-pop: 0 12px 28px -8px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.3);
+  --focus-ring: 0 0 0 3px rgb(var(--ring) / 0.3);
 
-  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a3aab8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b4bbc5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   color-scheme: dark;
+}
+
+/* Analytical panels carry a soft Fluxdesk-blue field over their theme surface. */
+.dashboard-overview-panel,
+.reports-overview-panel {
+  background-color: rgb(var(--surface));
+  background-image: radial-gradient( /* taste-skill-ignore: The approved design explicitly calls for a radial data-panel background. */
+    ellipse 85% 100% at 0% 0%,
+    rgb(36 87 255 / 0.10) 0%,
+    rgb(36 87 255 / 0.065) 25%,
+    rgb(36 87 255 / 0.035) 50%,
+    rgb(36 87 255 / 0.012) 72%,
+    transparent 100%
+  );
+}
+
+.dark .dashboard-overview-panel,
+.dark .reports-overview-panel {
+  background-color: #111318;
+  background-image: radial-gradient( /* taste-skill-ignore: The approved design explicitly calls for a radial data-panel background. */
+    ellipse 85% 100% at 0% 0%,
+    rgba(36, 87, 255, 0.22) 0%,
+    rgba(36, 87, 255, 0.14) 25%,
+    rgba(36, 87, 255, 0.07) 50%,
+    rgba(36, 87, 255, 0.025) 72%,
+    transparent 100%
+  );
+}
+
+@media (min-width: 640px) {
+  :root { --page-gutter: 1.5rem; }
+}
+
+@media (min-width: 1024px) {
+  :root { --page-gutter: 2rem; }
 }
 
 @layer base {
@@ -86,8 +220,8 @@
     @apply font-display;
   }
   ::selection {
-    background: #ffd8b8;
-    color: #14161b;
+    background: rgb(var(--brand-soft));
+    color: rgb(var(--fg));
   }
   :focus-visible {
     outline: 2px solid rgb(var(--ring));
@@ -95,11 +229,7 @@
   }
   input[type='checkbox'],
   input[type='radio'] {
-    accent-color: #0038ff;
-  }
-  .dark input[type='checkbox'],
-  .dark input[type='radio'] {
-    accent-color: #5b7cff;
+    accent-color: rgb(var(--brand-action));
   }
   * {
     scrollbar-width: thin;
@@ -117,9 +247,14 @@
   }
 }
 
+/* Keep Recharts' pointer focus from drawing a UA rectangle; keyboard focus retains the ring above. */
+.recharts-surface:focus:not(:focus-visible) {
+  outline: none;
+}
+
 @layer components {
   .card {
-    @apply rounded-card border border-line bg-surface shadow-card;
+    @apply rounded-card border border-line bg-surface;
   }
   .card-padded {
     @apply card p-5 sm:p-6;
@@ -133,34 +268,38 @@
     @apply mt-1 max-w-2xl text-sm text-fg-muted;
   }
   .section-title {
-    @apply font-display text-[0.9375rem] font-semibold leading-5 tracking-tight text-fg;
+    @apply font-sans text-base font-semibold leading-6 tracking-tight text-fg;
   }
   .numeral {
-    @apply font-display font-semibold tabular-nums tracking-tight;
+    @apply font-sans font-semibold tabular-nums tracking-tight;
   }
   .link {
     @apply rounded font-medium text-brand-fg underline-offset-2 hover:underline;
   }
 
   .btn {
-    @apply inline-flex min-h-[2.5rem] select-none items-center justify-center gap-2 whitespace-nowrap rounded-control px-4 py-2 text-sm font-medium transition-[background-color,border-color,box-shadow,color,transform] duration-120 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0;
+    @apply inline-flex min-h-[2.5rem] select-none items-center justify-center gap-2 whitespace-nowrap rounded-control px-4 py-2 text-sm font-medium transition-[background-color,border-color,box-shadow,color,transform] duration-120 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 disabled:active:translate-y-0;
   }
   .btn-primary {
-    @apply btn bg-brand text-white hover:bg-brand-600 active:bg-brand-700;
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(0 28 133 / 0.35);
+    @apply btn bg-brand-action text-white hover:bg-brand-action-hover active:bg-brand-action-active;
   }
   .btn-primary:disabled {
-    box-shadow: none;
+    @apply bg-disabled-bg text-disabled-fg;
   }
   .btn-secondary {
-    @apply btn border border-line-strong bg-surface text-fg shadow-xs hover:bg-surface-muted active:bg-surface-muted;
+    @apply btn border border-line-strong bg-surface text-fg hover:bg-surface-muted active:bg-surface-muted;
+  }
+  .btn-secondary:disabled {
+    @apply border-line bg-disabled-bg text-disabled-fg;
   }
   .btn-ghost {
     @apply btn text-fg-muted hover:bg-surface-muted hover:text-fg;
   }
+  .btn-ghost:disabled {
+    @apply bg-transparent text-disabled-fg;
+  }
   .btn-danger {
-    @apply btn bg-danger text-white hover:bg-red-700 active:bg-red-800;
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14);
+    @apply btn bg-danger-action text-white hover:bg-danger-action-hover active:bg-danger-action-active;
   }
   .btn-sm {
     @apply !min-h-0 gap-1.5 px-3 py-1.5 text-xs;
@@ -173,10 +312,14 @@
     @apply mb-1.5 block text-sm font-medium text-fg;
   }
   .field-input {
-    @apply block min-h-[2.5rem] w-full rounded-control border border-line-strong bg-surface px-3 py-2 text-sm text-fg shadow-xs transition-[border-color,box-shadow] duration-120 placeholder:text-fg-subtle hover:border-fg-subtle/60 focus:border-brand focus:outline-none focus:shadow-focus disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-60;
+    @apply block min-h-[2.5rem] w-full rounded-control border border-line-strong bg-surface px-3 py-2 text-sm text-fg transition-[border-color,box-shadow,background-color] duration-120 placeholder:text-fg-subtle hover:border-fg-subtle/60 focus:border-brand-action disabled:cursor-not-allowed disabled:border-line disabled:bg-disabled-bg disabled:text-disabled-fg;
   }
-  .dark .field-input:focus {
-    border-color: rgb(var(--ring));
+  .field-input:focus-visible {
+    outline: 2px solid rgb(var(--ring));
+    outline-offset: 2px;
+  }
+  .field-input:disabled::placeholder {
+    color: rgb(var(--disabled-fg));
   }
   select.field-input {
     @apply cursor-pointer appearance-none bg-no-repeat pr-9;
@@ -185,10 +328,13 @@
     background-size: 1rem;
   }
   .field-input[aria-invalid='true'] {
-    @apply border-danger focus:shadow-[0_0_0_3px_rgb(220_38_38/0.22)];
+    @apply border-danger;
+  }
+  .field-input[aria-invalid='true']:focus-visible {
+    outline-color: rgb(var(--danger));
   }
   .field-error {
-    @apply mt-1.5 text-sm text-red-700 dark:text-red-400;
+    @apply mt-1.5 text-sm text-danger;
   }
   .field-hint {
     @apply mt-1.5 text-xs text-fg-muted;

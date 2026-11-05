@@ -19,6 +19,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'USER_UPDATED' && nextSession?.user.id) {
+        void queryClient.invalidateQueries({ queryKey: ['profile', nextSession.user.id] })
+      }
       if (event === 'SIGNED_OUT') {
         if (hadSession.current && !manualSignOut.current) setSessionExpired(true)
         manualSignOut.current = false
@@ -83,6 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error }
   }, [])
 
+  const updateEmail = useCallback<AuthContextValue['updateEmail']>(async (email) => {
+    const normalized = email.trim().toLowerCase()
+    const { data, error } = await supabase.auth.updateUser({ email: normalized }, {
+      emailRedirectTo: `${window.location.origin}/configuracoes`,
+    })
+    return { error, needsConfirmation: !error && data.user?.email?.toLowerCase() !== normalized }
+  }, [])
+
   const clearSessionExpired = useCallback(() => setSessionExpired(false), [])
   const refetchProfile = useCallback(() => {
     void profileQuery.refetch()
@@ -104,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       requestPasswordReset,
       updatePassword,
+      updateEmail,
     }),
     [
       initializing,
@@ -120,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       requestPasswordReset,
       updatePassword,
+      updateEmail,
     ],
   )
 

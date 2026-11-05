@@ -10,6 +10,7 @@ export function ReportFiltersBar({
   categories,
   staff,
   dirty,
+  dashboard = false,
 }: {
   filters: ReportFilters
   onChange: (patch: Partial<ReportFilters>) => void
@@ -17,12 +18,23 @@ export function ReportFiltersBar({
   categories: Category[]
   staff?: { id: string; full_name: string }[]
   dirty: boolean
+  dashboard?: boolean
 }) {
   const custom = filters.period === 'custom'
   const invalidRange = custom && filters.from !== '' && filters.to !== '' && filters.from > filters.to
   return (
-    <section aria-label="Filtros do relatório" className="card p-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <section aria-label="Filtros do relatório" className={dashboard ? 'card p-3 sm:p-4' : 'card p-4'}>
+      {dashboard && (
+        <div className="mb-3 flex items-center justify-between gap-3 xl:hidden">
+          <h2 className="text-sm font-semibold text-fg">Filtros</h2>
+          {dirty && (
+            <button type="button" className="btn-ghost !min-h-0 px-2 py-1 text-xs" onClick={onClear}>
+              Restaurar padrão
+            </button>
+          )}
+        </div>
+      )}
+      <div className={dashboard ? 'grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 xl:grid-cols-4' : 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'}>
         <SelectField label="Período" value={filters.period} onChange={(e) => onChange({ period: e.target.value as ReportFilters['period'] })}>
           {PERIODS.map((p) => (
             <option key={p} value={p}>
@@ -88,7 +100,7 @@ export function ReportFiltersBar({
           A data inicial deve ser anterior à data final.
         </p>
       )}
-      {dirty && (
+      {dirty && !dashboard && (
         <div className="mt-3">
           <button type="button" className="btn-ghost !min-h-0 px-2 py-1 text-xs" onClick={onClear}>
             Restaurar filtros padrão

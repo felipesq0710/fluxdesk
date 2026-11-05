@@ -123,7 +123,7 @@ export function useUploadAttachments(id: string) {
 export function useDeleteAttachment(id: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (attachment: Pick<TicketAttachment, 'id' | 'storage_path'>) => api.deleteAttachment(attachment),
+    mutationFn: (attachment: Pick<TicketAttachment, 'id' | 'storage_path' | 'mime_type'>) => api.deleteAttachment(attachment),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ticketKeys.attachments(id) }),
   })
 }

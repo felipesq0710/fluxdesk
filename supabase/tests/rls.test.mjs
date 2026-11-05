@@ -38,7 +38,7 @@ await db.exec(`
   );
   alter table storage.objects enable row level security;
   grant usage on schema storage to authenticated;
-  grant select, insert, delete on storage.objects to authenticated;
+  grant select, insert, update, delete on storage.objects to authenticated;
 `)
 
 for (const f of readdirSync(MIG_DIR).filter((n) => n.endsWith('.sql')).sort()) {
@@ -324,6 +324,29 @@ await t('storage.objects: upload só na pasta do próprio chamado', async () => 
   await fails(r1, `insert into storage.objects (bucket_id, name, owner_id) values ('ticket-attachments', 'lixo/arquivo.png', $1)`, [r1], /row-level security/i)
   assert.equal((await as(r2, `select 1 from storage.objects`)).rows.length, 0)
   assert.equal((await as(t1, `select 1 from storage.objects`)).rows.length, 1)
+})
+
+await t('storage.objects: foto de perfil privada e restrita ao próprio usuário', async () => {
+  const bucket = await admin(`select public, file_size_limit, allowed_mime_types from storage.buckets where id='profile-avatars'`)
+  assert.equal(bucket.rows[0].public, false)
+  assert.equal(bucket.rows[0].file_size_limit, 5242880)
+  assert.deepEqual(bucket.rows[0].allowed_mime_types, ['image/jpeg', 'image/png', 'image/webp'])
+  await as(r1, `insert into storage.objects (bucket_id, name, owner_id) values ('profile-avatars', $1 || '/avatar', $1)`, [r1])
+  assert.equal((await as(r1, `select 1 from storage.objects where bucket_id='profile-avatars'`)).rows.length, 1)
+  assert.equal((await as(r2, `select 1 from storage.objects where bucket_id='profile-avatars'`)).rows.length, 0)
+  await fails(r2, `insert into storage.objects (bucket_id, name, owner_id) values ('profile-avatars', $1 || '/avatar', $1)`, [r1], /row-level security/i)
+  await as(r2, `update storage.objects set name='forbidden/avatar' where bucket_id='profile-avatars' and name=$1 || '/avatar'`, [r1])
+  await as(r2, `delete from storage.objects where bucket_id='profile-avatars' and name=$1 || '/avatar'`, [r1])
+  assert.equal((await as(r1, `select name from storage.objects where bucket_id='profile-avatars'`)).rows[0].name, `${r1}/avatar`)
+  await as(r1, `update storage.objects set owner_id=$1 where bucket_id='profile-avatars' and name=$1 || '/avatar'`, [r1])
+  assert.equal((await as(r1, `select name from storage.objects where bucket_id='profile-avatars'`)).rows.length, 1)
+  await as(r1, `delete from storage.objects where bucket_id='profile-avatars' and name=$1 || '/avatar'`, [r1])
+})
+
+await t('auth.users: email do perfil sincronizado após confirmação', async () => {
+  await admin(`update auth.users set email='rita-confirmada@x.com' where id=$1`, [r1])
+  const result = await admin(`select email from public.profiles where id=$1`, [r1])
+  assert.equal(result.rows[0].email, 'rita-confirmada@x.com')
 })
 
 console.log('\nCategorias')
