@@ -258,7 +258,7 @@ Os testes automatizados de acessibilidade utilizam axe. A revisão manual com le
 
 ### Requisitos
 
-- Node.js 20 ou superior.
+- Node.js 20.19.0 ou superior (ou 22.12.0 ou superior).
 - npm.
 - Git.
 - Projeto Supabase próprio para executar a versão funcional.
