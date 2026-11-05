@@ -58,14 +58,6 @@ export function Header({ onOpenMenu }: { onOpenMenu: () => void }) {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Link
-            to="/notificacoes"
-            className="btn-ghost btn-icon relative"
-            aria-label={unread > 0 ? `Notificações, ${unread} não lida${unread > 1 ? 's' : ''}` : 'Notificações'}
-          >
-            <Bell className="h-5 w-5" aria-hidden="true" />
-            {unread > 0 && <NotificationCount count={unread} />}
-          </Link>
           <div className="ml-1 border-l border-line pl-3">
             <AccountMenu placement="below" />
           </div>

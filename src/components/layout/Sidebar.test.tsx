@@ -40,4 +40,11 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: 'Chamados' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Dashboard' })).not.toHaveAttribute('aria-current')
   })
+
+  it('preserva o sino da opção Notificações na Sidebar', () => {
+    renderSidebar('/chamados')
+    const notifications = screen.getByRole('link', { name: 'Notificações' })
+    expect(notifications).toHaveAttribute('href', '/notificacoes')
+    expect(notifications.querySelector('svg')).toBeInTheDocument()
+  })
 })
